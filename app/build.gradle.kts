@@ -40,7 +40,7 @@ configure<ApplicationExtension> {
     namespace = "org.schabi.newpipe"
 
     defaultConfig {
-        applicationId = "org.schabi.newpipe"
+        applicationId = "org.schabi.newpipe.api21"
         resValue("string", "app_name", "NewPipe")
         minSdk = 21
         targetSdk = 35
