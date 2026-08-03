@@ -1,0 +1,38 @@
+name: "Build debug APK"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 'dev'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      - name: Patch minSdk to 21
+        run: find . -name "build.gradle*" | xargs grep -l minSdk | xargs sed -i 's/minSdk\s*=\s*[0-9]*/minSdk = 21/'
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace
+      - name: Rename APK
+        run: |
+          VERSION_NAME="$(jq -r ".elements[0].versionName" "app/build/outputs/apk/debug/output-metadata.json")"
+          echo "Version name: $VERSION_NAME" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat "app/build/outputs/apk/debug/output-metadata.json" >> "$GITHUB_STEP_SUMMARY"
+          echo >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          mv app/build/outputs/apk/debug/*.apk "app/build/outputs/apk/debug/NewPipe_v${VERSION_NAME}_api21.apk"
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: app/build/outputs/apk/debug/*.apk
